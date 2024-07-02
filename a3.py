@@ -64,31 +64,32 @@ st.title("Top Performing Posts")
 st.dataframe(topPosts(df).head(5), use_container_width=True)
 
 
-st.title("Posts Formats")
-# pie chart by post type
-df_pie = df.groupby(['post_format']).count()
-df_pie = df_pie['post_code'].reset_index()
-st.dataframe(df_pie, use_container_width=True)
-# Pie Chart
-st.subheader("Post Formats")
-pie_chart_data = df_pie
-plt.pie(pie_chart_data['post_code'], labels=pie_chart_data['post_format'])
-st.pyplot( plt )
-
-
-# posts sent based on date
+# Post Volumes
+# group dates by weeknumber. Read date using parse.
 st.title("Ritmo di Pubblicazione")
-
-# Group dates by weeknumber. Read date using parse.
 df['post_week'] = df['post_date'].apply(lambda x: parser.parse(x, dayfirst=True).isocalendar()[1])
-st.dataframe(df, use_container_width=True)
 
-# group by values, count, then only select the relevant columns
+# group by Weeknum & author, count, then only select the relevant columns
 col_toGroupBy = ['post_week','author']
 df_calendar = df.groupby(col_toGroupBy).count().reset_index().rename(columns={'Unnamed: 0':'count'})[col_toGroupBy+['count']]
-
-st.dataframe(df_calendar, use_container_width=True)
 st.line_chart(df_calendar, x=col_toGroupBy[0], y='count', color=col_toGroupBy[1])
+
+
+# Post formats: reels, single post, carousels.
+st.title("Posts Formats")
+st.subheader("Post Formats")
+pie_chart_data = df.groupby(['post_format']).count()['post_code'].reset_index()
+plt.pie(pie_chart_data['post_code'], labels=pie_chart_data['post_format'])
+st.pyplot( plt )
+st.dataframe(pie_chart_data, use_container_width=True)
+
+# Bar Chart
+st.subheader("Post Formats")
+bar_chart_data = df.groupby(['post_format']).count()['post_code'].reset_index()
+st.bar_chart(bar_chart_data, x='post_format', y='post_code')
+st.dataframe(bar_chart_data, use_container_width=True)
+
+
 
 
 
