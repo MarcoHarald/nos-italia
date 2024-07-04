@@ -17,3 +17,8 @@ A simple Streamlit app showing an internal tool that lets you create, manage, an
    ```
    $ streamlit run streamlit_app.py
    ```
+
+If streamlit does not install because of pywheels use:
+
+$ pip install --upgrade pip setuptools wheel
+
