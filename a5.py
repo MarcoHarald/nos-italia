@@ -1,3 +1,6 @@
+# DASHBOARD: streamlit app to display, compare and track IG account data
+# RUNNER: runs the api and updates the database
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -103,6 +106,8 @@ if page == "Trends":
     st.header("Key Stats Over Time")
     
     author_names = data['author_name'].unique()
+
+
 
     # Plotting data over time
     fig = px.line(data, x='post_date', y='like_count', color='author_name', title='Average Likes Over Time')

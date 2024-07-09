@@ -1,0 +1,126 @@
+{
+      "status": "done",
+      "response": {
+            "status_code": 200,
+            "content_type": "application/json",
+            "body": {
+                  "data": {
+                        "user": {
+                              "ai_agent_type": null,
+                              "biography": "\u2708\ufe0f CEO/Chairman @vaynermedia @vaynersports \n\ud83d\udc08\u200d\u2b1b Creator @veefriends\n\ud83d\udd2e Investor FB,Venmo,Twitter,Liquid Death\n\ud83d\udcd6 Check out my latest book \ud83d\udc47",
+                              "bio_links": [
+                                    {
+                                          "title": "Day Trading Attention",
+                                          "lynx_url": "https://l.instagram.com/?u=http%3A%2F%2Fgaryvee.com%2Fdta&e=AT02ZNTY7E5d9FGuOtbCwxDBaVAkqSE_2lVYdP5F3_dA5OO85uC1UKPLcw5SvrydCJWy9ge-enqPOc9WtD33DMGaP4dCdTinH7MVH-g",
+                                          "url": "http://garyvee.com/dta",
+                                          "link_type": "external"
+                                    },
+                                    {
+                                          "title": "Fanatics",
+                                          "lynx_url": "https://l.instagram.com/?u=https%3A%2F%2Fgaryvee.com%2FFanatics&e=AT0BG8Ft6lnWFHAoy0sVQHBM__sa-XIC0gREno8IyCQYLuYzs97bQqM9c4lmuAmiZRyLq-O-0yx606zECrBH9jQ_2JwazFiGcT6wCnM",
+                                          "url": "https://garyvee.com/Fanatics",
+                                          "link_type": "external"
+                                    }
+                              ],
+                              "fb_profile_biolink": null,
+                              "biography_with_entities": {
+                                    "raw_text": "\u2708\ufe0f CEO/Chairman @vaynermedia @vaynersports \n\ud83d\udc08\u200d\u2b1b Creator @veefriends\n\ud83d\udd2e Investor FB,Venmo,Twitter,Liquid Death\n\ud83d\udcd6 Check out my latest book \ud83d\udc47",
+                                    "entities": [
+                                          {
+                                                "user": {
+                                                      "username": "veefriends"
+                                                },
+                                                "hashtag": null
+                                          },
+                                          {
+                                                "user": {
+                                                      "username": "vaynersports"
+                                                },
+                                                "hashtag": null
+                                          },
+                                          {
+                                                "user": {
+                                                      "username": "vaynermedia"
+                                                },
+                                                "hashtag": null
+                                          }
+                                    ]
+                              },
+                              "blocked_by_viewer": false,
+                              "restricted_by_viewer": false,
+                              "country_block": false,
+                              "eimu_id": "113062596752109",
+                              "external_url": "http://garyvee.com/dta",
+                              "external_url_linkshimmed": "https://l.instagram.com/?u=http%3A%2F%2Fgaryvee.com%2Fdta&e=AT125qJikFD7H9r1LustYGDAssWs36qrqa7yyS2ad-sKxgMXhpuu0WZLK6uTSqwdjNUc9KF4ZaVBvxQVj13zbAUn5dotQaLFfoyANfM",
+                              "edge_followed_by": {
+                                    "count": 10241999
+                              },
+                              "fbid": "17841400998880026",
+                              "followed_by_viewer": false,
+                              "edge_follow": {
+                                    "count": 7489
+                              },
+                              "follows_viewer": false,
+                              "full_name": "Gary Vay-Ner-Chuk",
+                              "group_metadata": null,
+                              "has_ar_effects": true,
+                              "has_clips": true,
+                              "has_guides": false,
+                              "has_chaining": true,
+                              "has_channel": false,
+                              "has_blocked_viewer": false,
+                              "highlight_reel_count": 19,
+                              "has_requested_viewer": false,
+                              "hide_like_and_view_counts": false,
+                              "id": "1697296",
+                              "is_business_account": false,
+                              "is_professional_account": true,
+                              "is_supervision_enabled": false,
+                              "is_guardian_of_viewer": false,
+                              "is_supervised_by_viewer": false,
+                              "is_supervised_user": false,
+                              "is_embeds_disabled": false,
+                              "is_joined_recently": false,
+                              "guardian_id": null,
+                              "business_address_json": "{\"city_name\": null, \"city_id\": null, \"latitude\": null, \"longitude\": null, \"street_address\": null, \"zip_code\": null}",
+                              "business_contact_method": "CALL",
+                              "business_email": null,
+                              "business_phone_number": null,
+                              "business_category_name": null,
+                              "overall_category_name": null,
+                              "category_enum": null,
+                              "category_name": null,
+                              "is_private": false,
+                              "is_verified": true,
+                              "is_verified_by_mv4b": false,
+                              "is_regulated_c18": false,
+                              "edge_mutual_followed_by": {
+                                    "count": 0,
+                                    "edges": []
+                              },
+                              "pinned_channels_list_count": 0,
+                              "profile_pic_url": "https://instagram.fiev14-2.fna.fbcdn.net/v/t51.2885-19/447913595_1241465900569550_7339008130351792368_n.jpg?stp=dst-jpg_s150x150&_nc_ht=instagram.fiev14-2.fna.fbcdn.net&_nc_cat=1&_nc_ohc=5dj7CMei_HsQ7kNvgESgi5q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_AYCGoZolVcGpPnECLJq22duFey63xXmSSdCAcS3OrHZr7A&oe=6693412B&_nc_sid=8b3546",
+                              "profile_pic_url_hd": "https://instagram.fiev14-2.fna.fbcdn.net/v/t51.2885-19/447913595_1241465900569550_7339008130351792368_n.jpg?stp=dst-jpg_s320x320&_nc_ht=instagram.fiev14-2.fna.fbcdn.net&_nc_cat=1&_nc_ohc=5dj7CMei_HsQ7kNvgESgi5q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_AYBohfZ8gpOvMN19W-itUTODK8I1hwMAqWZ1T5HET2yITg&oe=6693412B&_nc_sid=8b3546",
+                              "requested_by_viewer": false,
+                              "should_show_category": true,
+                              "should_show_public_contacts": true,
+                              "show_account_transparency_details": true,
+                              "transparency_label": null,
+                              "transparency_product": null,
+                              "username": "garyvee",
+                              "connected_fb_page": null,
+                              "pronouns": [],
+                              "edge_owner_to_timeline_media": {
+                                    "count": 9550,
+                                    "page_info": {
+                                          "has_next_page": true,
+                                          "end_cursor": ""
+                                    },
+                                    "edges": []
+                              }
+                        }
+                  },
+                  "status": "ok"
+            }
+      }
+}
