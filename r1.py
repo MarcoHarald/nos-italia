@@ -3,6 +3,7 @@
 
 import requests
 import json
+from scraper import scrapeAccountPosts
 
 import streamlit as st
 import pandas as pd
@@ -17,6 +18,7 @@ url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
+# API Call on profile info: Get user_id from username
 def userInfo(target_username, file_id):
 
     url = "https://rocketapi-for-instagram.p.rapidapi.com/instagram/user/get_info"
@@ -29,7 +31,11 @@ def userInfo(target_username, file_id):
     }
 
     response = requests.post(url, json=payload, headers=headers)
-    save_file = open(file_id+".json", "w")
+
+    # change file name: username to ig_id
+    # target_id = (response.json())['response']['body']['data']['user']['id']
+    
+    save_file = open(target_username+".json", "w")
     json.dump(response.json(), save_file, indent = 6)
     save_file.close()
     return response.json()
@@ -38,7 +44,7 @@ def userInfo(target_username, file_id):
 def instagramID_API(target_username):
 
     # extract user's id from the API response 
-    # response = userInfo(target_username, file_id=target_username)
+    response = userInfo(target_username, file_id=target_username)
     f = open(target_username+'.json')
     response = json.load(f)
     target_id = response['response']['body']['data']['user']['id']
@@ -49,7 +55,6 @@ def instagramID_API(target_username):
 
     # convert export table to pandadataframe then dict
     df = pd.DataFrame(df, columns = ['ig_username','ig_user_id'])
-    print(df)
 
     # Convert DataFrame to list of dictionaries
     data = df.to_dict('records')
@@ -62,27 +67,52 @@ def instagramID_API(target_username):
     ).execute()
 
     # output simpler list
+    print('ID Fetcher:', df_list[0])
     return df_list
 
 # DATA SCRAPER CALL
 # > needs to know which account
 # > needs to know which posts (from what date, which is the limit post)
-
 scrape_posts_after_id   = ''
 scrape_posts_after_date = ''
 scrape_posts_from_account = ''
 
 
-# DATA SCRAPER from IG
-# connects to the API
-# imports data as JSON
-# converts to CSV
-# updates data in the database
 
 
+# TODO: check if username is in the supabase database
 
 # define username to extract ID for 
-target_username = 'garyvee'
+target_usernames = ['garyvee']
+df_usernames_ids = []
 
-df = []
-df += instagramID_API(target_username)
+
+# New unsernames, from which to extract user IDs
+for target_username in target_usernames:
+    df_usernames_ids += instagramID_API(target_username)
+
+# puts username IDs into a nice format
+username_ids = pd.DataFrame(df_usernames_ids, columns = ['ig_username','ig_user_id'])
+print(username_ids)
+
+# DATA SCRAPER from IG
+# Connects to the API, imports data as JSON, converts to CSV, updates data in the database.
+for selected_account in df_usernames_ids:
+    # scrape accounts
+    print('---------------------------')
+    print('Scraping & uploading:', selected_account[0])
+    account_posts = scrapeAccountPosts(selected_account=selected_account, num_scrapes=2, post_max_id=0, label="zulu01")
+
+    # Convert DataFrame to list of dictionaries
+    data = account_posts.to_dict('records')
+
+    # upsert to table: instagram_roster
+    table_name = "instagram"
+    response = supabase.table(table_name).upsert(
+        data,
+        on_conflict="post_code"
+    ).execute()
+
+    # TODO: add max_id for each user, so that the next query will be lighter
+
+

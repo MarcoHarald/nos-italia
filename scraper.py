@@ -131,12 +131,13 @@ def load_post_details(filename):
     return df
 
 # CREATE API CALLS and SAVE DATA TO FILE
-def run_api_series(account, id, max_id, search_count):
+def run_api_series(account, id, max_id, search_count, count, label):
     for i in range(search_count):
 
         # setup filesaves and run API call
-        file_id = "charlie_" + account + "_" + str(i)
-        post_list = list_posts(id, count, max_id, file_id)
+        file_id = label + "_" + account + "_" + str(i)
+        post_list = list_posts(int(id), count, max_id, file_id)
+
 
         # API tells us whether there are more posts to scrape
         print("More posts to scrape:", post_list["response"]["body"]["more_available"])
@@ -163,18 +164,15 @@ def combine_account_files(selected_accounts):
     
     appended_data = pd.concat(appended_data)
     return appended_data
-        
 
-# FIND ACCOUNT ID: https://www.instagram.com/web/search/topsearch/?query=legaofficial
-IG_accounts = []
-IG_accounts += [['Lega', 8720216241]]
-IG_accounts += [['FDI',  276272006]]
-IG_accounts += [['PD',   519535327]]
-IG_accounts += [['AVS',  54849421205]]
-IG_accounts += [['M5S',  1275108972]]
-IG_accounts += [['NOS',  61786487814]]
+# MEGA SCRAPER FUNCTION    
+def scrapeAccountPosts(selected_account, num_scrapes, post_max_id, label):
+    
+    # selected_account : details of the IG account to retrieve posts from
+    # num_scrapes : # how many re-runs of the API call to retrieve more posts
+    # post_max_id : to avoid re-scraping same posts, API returns a max_id of last scraped post
+    # label : label the JSON & output files with a unique identifier. Avoid overwriting and losing data. 
 
-for selected_account in IG_accounts:
     # setup API call to read files
     account = selected_account[0]
     id = selected_account[1]
@@ -183,16 +181,16 @@ for selected_account in IG_accounts:
     # setup API parameters
     count = 50 # max number of posts to scrape at a time
     max_id = 0 # to avoid re-scraping same posts, API returns a max_id of last scraped post
-    search_count = 10 # how many re-runs of the API call to retrieve more posts
+    search_count = num_scrapes # how many re-runs of the API call to retrieve more posts
 
     # CREATE API CALLS and SAVE DATA TO FILE
-    # run_api_series(account, id, max_id, search_count)
-    print("Skipping API. Using cached data.")
+    run_api_series(account, id, max_id, search_count, count, label)
+    # print("Skipping API. Using cached data.")
 
     # RECREATE LIST OF SAVED FILES TO READ FROM
     files = []
     for i in range(search_count):
-        files += ["charlie_"+account+"_"+str(i)+".json"]
+        files += [label+"_"+account+"_"+str(i)+".json"]
 
 
     # LOAD IN DATA FROM SAVEFILES and LOAD INTO A UNIFIED TABLE
@@ -213,11 +211,81 @@ for selected_account in IG_accounts:
     # save data into a dataframe and export
     df = pd.DataFrame(post_details, columns =  ['author_name', 'post_date', 'post_code', 'post_format', 'like_count', 'comment_count', 'video_views', 'caption_content', 'co_authors', 'media_format', 'media_image', 'media_first_frame', 'video_length', 'video_file_url','profile_pic_url', 'platform'])
 
-    df.to_csv("o_"+account+".csv")
-    print(type(df))
+    df.to_csv("o_"+label+"_"+account+".csv")
+    print("Scraped posts for ", "o_"+label+"_"+account+".csv")
+    return(df)
+
+# MEGA SCRAPER FUNCTION using cached files
+def scrapeAccountPostsCached(selected_account, num_scrapes, post_max_id, label):
+    
+    # selected_account : details of the IG account to retrieve posts from
+    # num_scrapes : # how many re-runs of the API call to retrieve more posts
+    # post_max_id : to avoid re-scraping same posts, API returns a max_id of last scraped post
+    # label : label the JSON & output files with a unique identifier. Avoid overwriting and losing data. 
+
+    # setup API call to read files
+    account = selected_account[0]
+    id = selected_account[1]
+    print("API CALL for:", account, id)
+
+    # setup API parameters
+    count = 50 # max number of posts to scrape at a time
+    max_id = 0 # to avoid re-scraping same posts, API returns a max_id of last scraped post
+    search_count = num_scrapes # how many re-runs of the API call to retrieve more posts
+
+    # CREATE API CALLS and SAVE DATA TO FILE
+    # run_api_series(account, id, max_id, search_count, label)
+    print("Skipping API. Using cached data.")
+
+    # RECREATE LIST OF SAVED FILES TO READ FROM
+    files = []
+    for i in range(search_count):
+        files += [label+"_"+account+"_"+str(i)+".json"]
 
 
-# combining all account files into one
-print("Saving data to single file...")
-df_all = combine_account_files(IG_accounts)
-df_all.to_csv("o_allData.csv")
+    # LOAD IN DATA FROM SAVEFILES and LOAD INTO A UNIFIED TABLE
+    post_details = []
+
+    for filename in files:
+
+        # Select file to load and import
+        try:
+            current_post_details = load_post_details(filename)
+            print("Imported saved data:",filename)
+            # append data into single output table
+            post_details += current_post_details
+
+        except:
+            print("Savefile not found:", filename)
+
+    # save data into a dataframe and export
+    df = pd.DataFrame(post_details, columns =  ['author_name', 'post_date', 'post_code', 'post_format', 'like_count', 'comment_count', 'video_views', 'caption_content', 'co_authors', 'media_format', 'media_image', 'media_first_frame', 'video_length', 'video_file_url','profile_pic_url', 'platform'])
+
+    df.to_csv("o_"+label+"_"+account+".csv")
+    print("Scraped posts for ", "o_"+label+"_"+account+".csv")
+    return(df)
+
+
+
+# FIND ACCOUNT ID: https://www.instagram.com/web/search/topsearch/?query=legaofficial
+IG_accounts = []
+IG_accounts += [['Lega', 8720216241]]
+IG_accounts += [['FDI',  276272006]]
+IG_accounts += [['PD',   519535327]]
+IG_accounts += [['AVS',  54849421205]]
+IG_accounts += [['M5S',  1275108972]]
+IG_accounts = [['NOS',  61786487814]]
+
+
+# EXAMPLE CODE RUN OF THIS SCRIPT
+if 1 == 2:
+
+    # scrape & save all the instagram posts of these accounts
+    for selected_account in IG_accounts:
+        scrapeAccountPosts(selected_account=selected_account, num_scrapes=10, post_max_id=0, label="zulu01")
+
+    # combine all account files into one
+    print("Saving data to single file...")
+    df_all = combine_account_files(IG_accounts)
+    df_all.to_csv("o_allData.csv")
+
