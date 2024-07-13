@@ -84,6 +84,7 @@ scrape_posts_from_account = ''
 # TODO: check if username is in the supabase database
 
 target_usernames = ['garyvee'] # define username to extract ID for 
+target_usernames = []
 df_usernames_ids = [] # New unsernames, from which to extract user IDs
 
 for target_username in target_usernames:
@@ -112,14 +113,13 @@ for selected_account in df_usernames_ids:
 # Convert the date string to a datetime object
 filter_date = datetime.strptime("26/04/2024", "%d/%m/%Y")
 table_name = "instagram"
-platform = "instagram"
-author_name = "garyvee"
+platform = "Instagram"
+author_name = "Gary Vay-Ner-Chuk"
 
 # Fetch data from Supabase
 response = supabase.table(table_name).select("*").eq("platform", platform).eq("author_name", author_name).gte("post_date", filter_date.isoformat()).execute()
-data = response.data
+data = pd.DataFrame(response.data)  # convert response to managable pandas 
 
-print(data)
 
 # save image to database, rename, add image name to the DB
 image_link = ''  # 
