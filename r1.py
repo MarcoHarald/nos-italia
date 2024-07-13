@@ -2,8 +2,10 @@
 # RUNNER: runs the api and updates the database
 
 import requests
+from datetime import datetime
 import json
 from scraper import scrapeAccountPosts
+from imageArchiver import uploadImage
 
 import streamlit as st
 import pandas as pd
@@ -79,40 +81,54 @@ scrape_posts_from_account = ''
 
 
 
-
 # TODO: check if username is in the supabase database
 
-# define username to extract ID for 
-target_usernames = ['garyvee']
-df_usernames_ids = []
+target_usernames = ['garyvee'] # define username to extract ID for 
+df_usernames_ids = [] # New unsernames, from which to extract user IDs
 
-
-# New unsernames, from which to extract user IDs
 for target_username in target_usernames:
     df_usernames_ids += instagramID_API(target_username)
 
 # puts username IDs into a nice format
 username_ids = pd.DataFrame(df_usernames_ids, columns = ['ig_username','ig_user_id'])
-print(username_ids)
+print('Scraping IG Accounts:',username_ids)
 
-# DATA SCRAPER from IG
-# Connects to the API, imports data as JSON, converts to CSV, updates data in the database.
+# DATA SCRAPER from IG: connects to the API, imports data as JSON, converts to CSV, updates data in the database.
 for selected_account in df_usernames_ids:
     # scrape accounts
-    print('---------------------------')
-    print('Scraping & uploading:', selected_account[0])
+    print('----- Scraping & uploading:', selected_account[0])
     account_posts = scrapeAccountPosts(selected_account=selected_account, num_scrapes=2, post_max_id=0, label="zulu01")
 
-    # Convert DataFrame to list of dictionaries
-    data = account_posts.to_dict('records')
-
-    # upsert to table: instagram_roster
-    table_name = "instagram"
-    response = supabase.table(table_name).upsert(
-        data,
-        on_conflict="post_code"
-    ).execute()
+    # upsert to table: instagram roster
+    data = account_posts.to_dict('records')     # Convert DataFrame to list of dictionaries
+    response = supabase.table(table_name="instagram").upsert(data, on_conflict="post_code").execute() 
 
     # TODO: add max_id for each user, so that the next query will be lighter
+
+# IMAGE CACHER: save cover images to the database 
+# extract image link
+# select username, post date after certain date,
+    
+# Convert the date string to a datetime object
+filter_date = datetime.strptime("26/04/2024", "%d/%m/%Y")
+table_name = "instagram"
+platform = "instagram"
+author_name = "garyvee"
+
+# Fetch data from Supabase
+response = supabase.table(table_name).select("*").eq("platform", platform).eq("author_name", author_name).gte("post_date", filter_date.isoformat()).execute()
+data = response.data
+
+print(data)
+
+# save image to database, rename, add image name to the DB
+image_link = ''  # 
+file_name = ''   # platform, account, postcode
+bucket_name = 'social_bucket'
+#uploadImage(image_link, file_name, bucket_name)
+
+
+
+
 
 

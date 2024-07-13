@@ -66,7 +66,7 @@ def load_post_details(filename):
         # device timestamp
         timestamp = str(item["taken_at"])
         timestamp = int(timestamp) #int(timestamp[:10])
-        post_date = datetime.utcfromtimestamp(timestamp).strftime('%d/%m/%Y')
+        post_date = datetime.utcfromtimestamp(timestamp).strftime('%Y/%m/%d')
 
         # save like count
         like_count = item["like_count"]
