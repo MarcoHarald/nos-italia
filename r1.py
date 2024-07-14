@@ -1,5 +1,5 @@
 # DASHBOARD: streamlit app to display, compare and track IG account data
-# RUNNER: runs the api and updates the database
+# RUNNER R1: runs the api and updates the database
 
 import requests
 from datetime import datetime
@@ -83,7 +83,7 @@ scrape_posts_from_account = ''
 
 # TODO: check if username is in the supabase database
 
-target_usernames = ['nasa'] # define username to extract ID for 
+target_usernames = ['globalbiorev'] # define username to extract ID for 
 # target_usernames = [] # NOTE: use blank list for cached data
 df_usernames_ids = [] # New unsernames, from which to extract user IDs
 
@@ -117,7 +117,7 @@ for selected_account in df_usernames_ids:
 filter_date = datetime.strptime("26/04/2024", "%d/%m/%Y")
 table_name = "instagram"
 platform = "Instagram"
-author_name = "NASA"
+author_name = "Global Biotech Revolution"
 
 # Fetch data from Supabase
 response = supabase.table(table_name).select("*").eq("platform", platform).eq("author_name", author_name).gte("post_date", filter_date.isoformat()).execute()
