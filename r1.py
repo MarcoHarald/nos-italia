@@ -83,8 +83,8 @@ scrape_posts_from_account = ''
 
 # TODO: check if username is in the supabase database
 
-target_usernames = ['garyvee'] # define username to extract ID for 
-target_usernames = []
+target_usernames = ['nasa'] # define username to extract ID for 
+# target_usernames = [] # NOTE: use blank list for cached data
 df_usernames_ids = [] # New unsernames, from which to extract user IDs
 
 for target_username in target_usernames:
@@ -98,11 +98,14 @@ print('Scraping IG Accounts:',username_ids)
 for selected_account in df_usernames_ids:
     # scrape accounts
     print('----- Scraping & uploading:', selected_account[0])
-    account_posts = scrapeAccountPosts(selected_account=selected_account, num_scrapes=2, post_max_id=0, label="zulu01")
+    account_posts = scrapeAccountPosts(selected_account=selected_account, num_scrapes=2, post_max_id=0, label="zulu02")
 
     # upsert to table: instagram roster
     data = account_posts.to_dict('records')     # Convert DataFrame to list of dictionaries
     response = supabase.table(table_name="instagram").upsert(data, on_conflict="post_code").execute() 
+
+    # DEBUG
+    print("Post details updated:", response.count)
 
     # TODO: add max_id for each user, so that the next query will be lighter
 
@@ -114,18 +117,25 @@ for selected_account in df_usernames_ids:
 filter_date = datetime.strptime("26/04/2024", "%d/%m/%Y")
 table_name = "instagram"
 platform = "Instagram"
-author_name = "Gary Vay-Ner-Chuk"
+author_name = "NASA"
 
 # Fetch data from Supabase
 response = supabase.table(table_name).select("*").eq("platform", platform).eq("author_name", author_name).gte("post_date", filter_date.isoformat()).execute()
 data = pd.DataFrame(response.data)  # convert response to managable pandas 
 
+# data = data.reset_index()
+print(data.head)
 
-# save image to database, rename, add image name to the DB
-image_link = ''  # 
-file_name = ''   # platform, account, postcode
-bucket_name = 'social_bucket'
-#uploadImage(image_link, file_name, bucket_name)
+for index, row in data.iterrows():
+    # save image to database, rename, add image name to the DB
+    print('-----')
+   
+    image_link = row['media_image']  
+    file_name = row['post_code']
+    bucket_name = 'social_bucket'
+
+    uploadImage(image_link, file_name, bucket_name)
+
 
 
 

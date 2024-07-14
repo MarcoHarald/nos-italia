@@ -44,8 +44,9 @@ def grid(data, n_cols):
     rows = [st.columns(n_cols) for _ in range(n_rows)] # define row IDs
     cols = [column for row in  rows for column in row] # define col 
 
-    for col, post_code, like_count, comment_count, author_name in zip(cols, top_posts['post_code'], top_posts['like_count'], top_posts['comment_count'], top_posts['author_name']): # loop through rows and select image
-        post_image_link = 'https://www.instagram.com/p/' + post_code +"/media/?size=l"
+    for col, post_code, post_image, like_count, comment_count, author_name in zip(cols, top_posts['post_code'], top_posts['saved_cover_image'], top_posts['like_count'], top_posts['comment_count'], top_posts['author_name']): # loop through rows and select image
+        # post_image_link = 'https://www.instagram.com/p/' + post_code +"/media/?size=l"
+        post_image_link = post_image
         col.image(post_image_link)
         col.write(f"Likes: {str(round(like_count/1000.0,1))} k")
         col.write(f"Comments: {comment_count}")

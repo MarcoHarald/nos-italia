@@ -57,12 +57,15 @@ def uploadImageExample():
 
 # Usage
 def uploadImage(image_link, file_name, bucket_name):
-    image_link = 'https://instagram.fiev22-1.fna.fbcdn.net/v/t51.29350-15/431180174_401607359233445_4256402937220781300_n.jpg?stp=dst-jpg_e15&efg=eyJ2ZW5jb2RlX3RhZyI6ImltYWdlX3VybGdlbi4xMDgweDE5MjAuc2RyLmYyOTM1MCJ9&_nc_ht=instagram.fiev22-1.fna.fbcdn.net&_nc_cat=105&_nc_ohc=pGD0o64JYfUQ7kNvgGDXQh5&edm=ABmJApABAAAA&ccb=7-5&ig_cache_key=MzMxNDE3MTM2NTM4ODE1MTI4MQ%3D%3D.2-ccb7-5&oh=00_AYDK9BkugAUiX9_E4Bvc8qAtsTehgoJUtTJ5n0VyPoabpA&oe=6693533C&_nc_sid=b41fef'
-    file_name = 'IG_garyvee_00'
-    bucket_name='social_bucket'
     result = process_single_link(image_link, file_name, bucket_name)
     if result:
+
+        # save link to cached image in supabase table
         print(f"Image successfully saved. Public URL: {result}")
+        response = (supabase.table("instagram").upsert({"post_code": file_name, "saved_cover_image": result}, on_conflict="post_code",).execute())
+       # response = (supabase.table("users").upsert({"id": 42, "handle": "saoirse", "display_name": "Saoirse"},on_conflict="handle",) .execute())
+
+
     else:
         print(f"Failed to save the image: {file_name}")
 
