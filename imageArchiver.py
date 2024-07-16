@@ -18,13 +18,12 @@ def download_image(url):
 
 def save_image_to_supabase(image, file_name, bucket_name):
     img_byte_arr = io.BytesIO()
-    image.save(img_byte_arr, format='PNG')
+    image.save(img_byte_arr, format='PNG') 
     img_byte_arr = img_byte_arr.getvalue()
     
     # Upload to Supabase Storage
-    # bucket_name = "social_bucket"
     file_path = f"cover_images/{file_name}"
-    supabase.storage.from_(bucket_name).upload(file_path, img_byte_arr)
+    supabase.storage.from_(bucket_name).upload(file_path, img_byte_arr)  #ISSUE SOME FILES NOT PASSED
     
     # Get public URL
     public_url = supabase.storage.from_(bucket_name).get_public_url(file_path)
@@ -32,17 +31,25 @@ def save_image_to_supabase(image, file_name, bucket_name):
     return public_url
 
 def process_single_link(image_link, file_name, bucket_name):
-    if image_link:
-        try:
-            image = download_image(image_link)
-            # file_name = image_link.split('/')[-1]  # Extract file name from URL
-            
-            public_url = save_image_to_supabase(image, file_name, bucket_name)
-            #print(f"Saved image: {file_name}, Public URL: {public_url}")
-            return public_url
-        except Exception as e:
-            print(f"Error processing image {image_link}: {str(e)}")
-            return None
+ 
+    print('DEBUG image link:', image_link)
+ #   if image_link:
+ #       try:
+    response = requests.get(image_link)   # get image from website
+    image = Image.open(io.BytesIO(response.content))    # convert from bytes  
+    try:
+        public_url = save_image_to_supabase(image, file_name, bucket_name)  # upload to supabase
+    except:
+        print('Skipped. Likely image already exists:', file_name)
+        public_url = supabase.storage.from_(bucket_name).get_public_url('cover_images/'+file_name)  # retrieve public link of file      
+        # public_url = supabase.table("instagram").select("saved_cover_image").eq('post_code',file_name).execute()
+        print(bucket_name, public_url)
+
+    return public_url
+    
+#        except Exception as e:
+#            print(f"Error processing image {image_link}: {str(e)}")
+#            return None
 
 # Usage
 def uploadImageExample():
@@ -57,17 +64,20 @@ def uploadImageExample():
 
 # Usage
 def uploadImage(image_link, file_name, bucket_name):
+
     result = process_single_link(image_link, file_name, bucket_name)
-    if result:
+    response = (supabase.table("instagram").upsert({"post_code": file_name, "saved_cover_image": result}, on_conflict="post_code",).execute())
+
+    # if result:
+    #     print(f"Image successfully saved: {file_name}")
 
         # save link to cached image in supabase table
-        print(f"Image successfully saved. Public URL: {result}")
-        response = (supabase.table("instagram").upsert({"post_code": file_name, "saved_cover_image": result}, on_conflict="post_code",).execute())
-       # response = (supabase.table("users").upsert({"id": 42, "handle": "saoirse", "display_name": "Saoirse"},on_conflict="handle",) .execute())
+        # response = (supabase.table("instagram").upsert({"post_code": file_name, "saved_cover_image": result}, on_conflict="post_code",).execute())
 
+#    else:
+#        print(f"Failed to save the image: {file_name}")
 
-    else:
-        print(f"Failed to save the image: {file_name}")
+    return result
 
 
 if 1 == 2:

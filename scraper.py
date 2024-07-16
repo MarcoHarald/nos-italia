@@ -37,7 +37,7 @@ def load_post_details(filename):
 
     # select the posts to read through
     items = d["response"]["body"]["items"]
-    post_account = d["response"]["body"]["user"]["full_name"]
+    # post_account = d["response"]["body"]["user"]["full_name"]
 
     # save file items
     df = []
@@ -45,7 +45,9 @@ def load_post_details(filename):
     for item in items:
         # author name
         author_name = item["user"]["full_name"]
-        author_name = post_account
+
+        # author username
+        author_username = item["user"]["username"]
 
         # save post code
         post_code = item["code"]
@@ -125,7 +127,7 @@ def load_post_details(filename):
             video_file_url = ""
             video_views = ""       
 
-        post_details =  [author_name, post_date, post_code, post_format, like_count, comment_count, video_views, caption_content, co_authors, media_format, media_image, media_first_frame, video_length, video_file_url,profile_pic_url, platform]
+        post_details =  [author_name, author_username, post_date, post_code, post_format, like_count, comment_count, video_views, caption_content, co_authors, media_format, media_image, media_first_frame, video_length, video_file_url,profile_pic_url, platform]
         df.append(post_details)
 
     return df
@@ -179,7 +181,7 @@ def scrapeAccountPosts(selected_account, num_scrapes, post_max_id, label):
     print("API CALL for:", account, id)
 
     # setup API parameters
-    count = 50 # max number of posts to scrape at a time
+    count = 3 # max number of posts to scrape at a time
     max_id = 0 # to avoid re-scraping same posts, API returns a max_id of last scraped post
     search_count = num_scrapes # how many re-runs of the API call to retrieve more posts
 
@@ -209,7 +211,7 @@ def scrapeAccountPosts(selected_account, num_scrapes, post_max_id, label):
             print("Savefile not found:", filename)
 
     # save data into a dataframe and export
-    df = pd.DataFrame(post_details, columns =  ['author_name', 'post_date', 'post_code', 'post_format', 'like_count', 'comment_count', 'video_views', 'caption_content', 'co_authors', 'media_format', 'media_image', 'media_first_frame', 'video_length', 'video_file_url','profile_pic_url', 'platform'])
+    df = pd.DataFrame(post_details, columns =  ['author_name', 'author_username', 'post_date', 'post_code', 'post_format', 'like_count', 'comment_count', 'video_views', 'caption_content', 'co_authors', 'media_format', 'media_image', 'media_first_frame', 'video_length', 'video_file_url','profile_pic_url', 'platform'])
 
     df.to_csv("o_"+label+"_"+account+".csv")
     print("Scraped posts for ", "o_"+label+"_"+account+".csv")
