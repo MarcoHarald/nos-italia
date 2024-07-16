@@ -2,6 +2,8 @@
 # RUNNER: runs the api and updates the database
 
 import streamlit as st
+import datetime
+from datetime import datetime
 import pandas as pd
 import plotly.express as px
 from supabase import create_client, Client
@@ -68,6 +70,19 @@ def grid_stacked(top_posts):
             st.write(f"Engagement Rate: {engagement_rate:.2f}")
             st.write(f"[View on Instagram]({row['post_code']})")
  
+def groupby_author(data):
+    # Assuming your DataFrame is named 'df'
+    grouped_df_author = data.groupby('author_name').agg({
+        'like_count': 'mean',
+        'comment_count': 'mean',
+        'post_code': 'count'
+    }).reset_index()
+
+    # Rename the columns for clarity
+    grouped_df_author.columns = ['author_name', 'avg_like_count', 'avg_comment_count', 'post_count']
+    return grouped_df_author
+
+
 # Import data to app
 data = pd.read_csv('o_allData.csv')
 data = fetch_data('instagram')
@@ -105,10 +120,54 @@ if page == "Key Stats":
 # Page Two
 if page == "Trends":
     st.header("Key Stats Over Time")
+    df = data
     
-    author_names = data['author_name'].unique()
+    author_names = data['author_name'].unique()    # unique list of account names for the selector
+    data = data.sort_values(by=['post_date'])     # order data by date so it doesn't go jagged
+    data['post_date'] = pd.to_datetime(data['post_date'])  # convert timestamps into datetime objects for python
+
+    # FILTER AUTHOR ACCOUNTS
+    # Create a multiselect widget for author selection
+    selected_authors = st.multiselect('Select authors:', author_names)
+
+    # Filter the DataFrame based on selected authors
+    if selected_authors:
+        data = data[data['author_name'].isin(selected_authors)]
+    else:
+        data = data
 
 
+    # FILTER DATES
+    # filter data to only the relevant months
+    earliest_date = '1/1/2024'
+    latest_date = '13/07/2024'
+
+    # Convert the string to a datetime object
+    date_object_1 = datetime.strptime(earliest_date, "%d/%m/%Y")
+    date_object_2 = datetime.strptime(latest_date, "%d/%m/%Y")
+
+    # Convert the datetime object to the desired format
+    formatted_date_1 = date_object_1.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+    formatted_date_2 = date_object_2.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+
+    data = data[(data['post_date'] >= formatted_date_1) & (data['post_date'] <= formatted_date_2)]
+
+
+    # GROUP BY WEEK & AUTHOR
+    data['week_number'] = data['post_date'].dt.isocalendar().week
+    # Assuming your DataFrame is named 'df'
+    grouped_df_AW = data.groupby(['author_name', 'week_number']).agg({
+        'like_count': 'mean',
+        'comment_count': 'mean',
+        'post_code': 'count'
+    }).reset_index()
+
+    # Rename the columns for clarity
+    grouped_df_AW.columns = ['author_name', 'post_date', 'like_count', 'comment_count', 'post_count']
+
+
+    # ASSIGN WHAT TO PLOT
+    data = grouped_df_AW
 
     # Plotting data over time
     fig = px.line(data, x='post_date', y='like_count', color='author_name', title='Average Likes Over Time')
@@ -122,7 +181,7 @@ if page == "Trends":
     
     st.header("Top Posts of the Week")
     author_name = st.selectbox("Select Author", author_names)
-    top_posts = get_top_posts(data, author_name)
+    top_posts = get_top_posts(df, author_name)
     grid(top_posts.head(30), n_cols=3)
 
 #  __name__ == "__main__":
