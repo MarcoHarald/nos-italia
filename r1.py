@@ -84,69 +84,73 @@ scrape_posts_from_account = ''
 
 # TODO: check if username is in the supabase database
 
-target_usernames = ['reformer.ramin'] # define username to extract ID for 
-# target_usernames = [] # NOTE: use blank list for cached data
-df_usernames_ids = [] # New unsernames, from which to extract user IDs
 
-for target_username in target_usernames:
-    df_usernames_ids += instagramID_API(target_username)
+def runInstagramScraper(username):
 
-# puts username IDs into a nice format
-username_ids = pd.DataFrame(df_usernames_ids, columns = ['ig_username','ig_user_id','ig_account_name'])
-print('Scraping IG Accounts:',username_ids)
+    target_usernames = [username] # define username to extract ID for 
+    # target_usernames = [] # NOTE: use blank list for cached data
+    df_usernames_ids = [] # New unsernames, from which to extract user IDs
 
-# DATA SCRAPER from IG: connects to the API, imports data as JSON, converts to CSV, updates data in the database.
-for selected_account in df_usernames_ids:
-    # scrape accounts
-    print('----- Scraping & uploading:', selected_account[0])
-    account_posts = scrapeAccountPosts(selected_account=selected_account, num_scrapes=2, post_max_id=0, label="zulu02")
+    for target_username in target_usernames:
+        df_usernames_ids += instagramID_API(target_username)
 
-    # upsert to table: instagram roster
-    data = account_posts.to_dict('records')     # Convert DataFrame to list of dictionaries
-    response = supabase.table(table_name="instagram").upsert(data, on_conflict="post_code").execute() 
+    # puts username IDs into a nice format
+    username_ids = pd.DataFrame(df_usernames_ids, columns = ['ig_username','ig_user_id','ig_account_name'])
+    print('Scraping IG Accounts:',username_ids)
 
-    # DEBUG
-    print("Post details updated:", response.count)
+    # DATA SCRAPER from IG: connects to the API, imports data as JSON, converts to CSV, updates data in the database.
+    for selected_account in df_usernames_ids:
+        # scrape accounts
+        print('----- Scraping & uploading:', selected_account[0])
+        account_posts = scrapeAccountPosts(selected_account=selected_account, num_scrapes=3, post_max_id=0, label="zulu02")
 
-    # TODO: add max_id for each user, so that the next query will be lighter
+        # upsert to table: instagram roster
+        data = account_posts.to_dict('records')     # Convert DataFrame to list of dictionaries
+        response = supabase.table(table_name="instagram").upsert(data, on_conflict="post_code").execute() 
 
-# IMAGE CACHER: save cover images to the database 
-# select username, post date after certain date,
+        # DEBUG
+        print("Post details updated:", response.count)
+
+        # TODO: add max_id for each user, so that the next query will be lighter
+
+    # IMAGE CACHER: save cover images to the database 
+    # select username, post date after certain date,
+        
+    # Convert the date string to a datetime object
+    filter_date = datetime.strptime("26/04/2024", "%d/%m/%Y")
+    table_name = "instagram"
+    platform = "Instagram"
+    author_username = target_usernames[0]
+
+    # Fetch data from Supabase
+    response = supabase.table(table_name).select("*").eq("platform", platform).eq("author_username", author_username).gte("post_date", filter_date.isoformat()).execute()
+    data = pd.DataFrame(response.data)  # convert response to managable pandas 
+
+    # data = data.reset_index()
+    print(data.head)
+    cached_link_table = []
+
+    for index, row in data.iterrows():
+        # save image to database, rename, add image name to the DB
+        print('-----')
     
-# Convert the date string to a datetime object
-filter_date = datetime.strptime("26/04/2024", "%d/%m/%Y")
-table_name = "instagram"
-platform = "Instagram"
-author_username = target_usernames[0]
+        image_link = row['media_image']  
+        file_name = row['post_code']
+        bucket_name = 'social_bucket'
 
-# Fetch data from Supabase
-response = supabase.table(table_name).select("*").eq("platform", platform).eq("author_username", author_username).gte("post_date", filter_date.isoformat()).execute()
-data = pd.DataFrame(response.data)  # convert response to managable pandas 
+        # Upload cached image links a single time
+        cached_link = uploadImage(image_link, file_name, bucket_name)
+        cached_link_table += [[image_link, cached_link]]
 
-# data = data.reset_index()
-print(data.head)
-cached_link_table = []
-
-for index, row in data.iterrows():
-    # save image to database, rename, add image name to the DB
-    print('-----')
-   
-    image_link = row['media_image']  
-    file_name = row['post_code']
-    bucket_name = 'social_bucket'
-
-    # Upload cached image links a single time
-    cached_link = uploadImage(image_link, file_name, bucket_name)
-    cached_link_table += [[image_link, cached_link]]
-
-# Bulk upsert cached image links to supabase   UPDATES ALREADY IN IMAGE ARCHIVER
-def updateCachedLinks(cached_link_table):
-    df_cached_links = pd.DataFrame(cached_link_table, columns=['media_image', 'saved_cover_image'])
-    cached_links = df_cached_links.to_dict('records')     # Convert DataFrame to list of dictionaries
-    response = (supabase.table("instagram").upsert(cached_links, on_conflict="post_code",).execute())
-    print('Updated cached image links')
+    # Bulk upsert cached image links to supabase   UPDATES ALREADY IN IMAGE ARCHIVER
+    def updateCachedLinks(cached_link_table):
+        df_cached_links = pd.DataFrame(cached_link_table, columns=['media_image', 'saved_cover_image'])
+        cached_links = df_cached_links.to_dict('records')     # Convert DataFrame to list of dictionaries
+        response = (supabase.table("instagram").upsert(cached_links, on_conflict="post_code",).execute())
+        print('Updated cached image links')
 
 
-
+# test run
+runInstagramScraper('NASA')
 
 

@@ -181,7 +181,7 @@ def scrapeAccountPosts(selected_account, num_scrapes, post_max_id, label):
     print("API CALL for:", account, id)
 
     # setup API parameters
-    count = 3 # max number of posts to scrape at a time
+    count = 50 # max number of posts to scrape at a time
     max_id = 0 # to avoid re-scraping same posts, API returns a max_id of last scraped post
     search_count = num_scrapes # how many re-runs of the API call to retrieve more posts
 

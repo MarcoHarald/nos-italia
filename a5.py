@@ -3,8 +3,11 @@
 
 import streamlit as st
 import datetime
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
+import subprocess
+import time
+from r1 import runInstagramScraper
 import plotly.express as px
 from supabase import create_client, Client
 import os
@@ -82,6 +85,125 @@ def groupby_author(data):
     grouped_df_author.columns = ['author_name', 'avg_like_count', 'avg_comment_count', 'post_count']
     return grouped_df_author
 
+# Calculate first day of a week number
+def get_date_of_week(year, week):
+    first_day_of_year = datetime(year, 1, 1)
+    first_monday = first_day_of_year + timedelta(days=(7 - first_day_of_year.weekday()))
+    target_date = first_monday + timedelta(weeks=week-1)
+    return target_date.strftime("%Y-%m-%d")
+
+# Slider feature to select range of weeks, returns filtered data  
+def weekSlider(df):
+
+    # Get the minimum and maximum week numbers from your data
+    min_week = df['week_number'].min()
+    max_week = df['week_number'].max()
+    
+    max_week = 29    # OVERRIDE TO CURRENT WEEK
+
+    # Assuming the data is from the current year
+    current_year = datetime.now().year
+
+    # Create a slider for week range selection
+    start_week, end_week = st.slider(
+        "Select Week Range",
+        min_value=int(min_week),
+        max_value=int(max_week),
+        value=(int(min_week), int(max_week))
+    )
+
+    # Display the date range
+    start_date = get_date_of_week(current_year, start_week)
+    end_date = get_date_of_week(current_year, end_week)
+    # st.write(f"Selected date range: {start_date} to {end_date}")
+
+    # Filter the dataframe based on the selected week range
+    df_filtered = df[(df['week_number'] >= start_week) & (df['week_number'] <= end_week)]
+    return df_filtered
+
+# Index post performance against lifetime (divides each post by the account avg., grouped by week)
+def get_author_summary(df):
+    # Group by author and week
+    grouped = df.groupby(['author_name', 'week_number'])
+    
+    # Calculate summary statistics
+    summary = grouped.agg({
+        'author_name': 'count',
+        'like_count': ['sum', 'mean']
+    }).reset_index()
+    
+    # Rename columns
+    summary.columns = ['author_name', 'week_number', 'post_count', 'total_likes', 'avg_likes_per_post']
+    
+    # Calculate lifetime average likes per post for each author
+    lifetime_avg = df.groupby('author_name')['like_count'].mean().reset_index()
+    lifetime_avg.columns = ['author_name', 'lifetime_avg_likes']
+    
+    # Merge summary with lifetime average
+    summary = pd.merge(summary, lifetime_avg, on='author_name')
+    
+    # Calculate indexed likes per post
+    summary['indexed_likes_per_post'] = summary['avg_likes_per_post'] / summary['lifetime_avg_likes']
+    
+    # Reorder columns
+    summary = summary[['author_name', 'week_number', 'post_count', 'avg_likes_per_post', 'indexed_likes_per_post']]
+    
+    return summary
+
+# filter data to between specified dates, returns filtered data    
+def filterByDate(data, earliest_date, lastest_date):
+    earliest_date = '1/1/2024'
+    latest_date = '13/07/2024'
+
+    # Convert the string to a datetime object
+    date_object_1 = datetime.strptime(earliest_date, "%d/%m/%Y")
+    date_object_2 = datetime.strptime(latest_date, "%d/%m/%Y")
+
+    # Convert the datetime object to the desired format
+    formatted_date_1 = date_object_1.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+    formatted_date_2 = date_object_2.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+
+    data = data[(data['post_date'] >= formatted_date_1) & (data['post_date'] <= formatted_date_2)]
+    return data
+
+
+def fetchAccountButton():
+        # Instagram username input and button
+    instagram_username = st.text_input("Enter Instagram username (without @)")
+    if st.button("Fetch Instagram Data"):
+        if instagram_username:
+            with st.spinner(f"Fetching data for @{instagram_username}... This may take about 20 seconds."):
+                progress_bar = st.progress(0)
+                for i in range(20):
+                    time.sleep(0.2)  # Simulate work being done
+                    progress_bar.progress(i + 1)
+                result = runInstagramScraper(instagram_username)
+                st.success(f"Data fetched for @{instagram_username}")
+                st.text(result)  # Display the result or message from the script
+        else:
+            st.warning("Please enter an Instagram username")
+
+    return instagram_username
+def fetchAccountSidebar():
+  # Sidebar for Instagram data fetching
+    st.sidebar.header("Fetch Instagram Data")
+    instagram_username = st.sidebar.text_input("Enter Instagram username (without @)")
+    fetch_button = st.sidebar.button("Fetch Instagram Data")
+
+    if fetch_button:
+        if instagram_username:
+            with st.sidebar:
+                with st.spinner(f"Fetching data for @{instagram_username}... This may take about 60 seconds."):
+                    progress_bar = st.progress(0)
+                    for i in range(100):
+                        time.sleep(0.6)  # Simulate work being done
+                        progress_bar.progress(i + 1)
+                    result = runInstagramScraper(instagram_username)
+                    st.success(f"Data fetched for @{instagram_username}")
+                    st.text_area("Script Output", result, height=200)  # Display the result or message from the script
+        else:
+            st.sidebar.warning("Please enter an Instagram username")
+
 
 # Import data to app
 data = pd.read_csv('o_allData.csv')
@@ -92,10 +214,11 @@ st.title("Social Media Performance Tracker")
 
 # Sidebar for navigation
 st.sidebar.title("Navigation")
-page = st.sidebar.selectbox("Go to", ["Key Stats", "Trends"])
+page = st.sidebar.selectbox("Go to", ["Key Stats", "Trends", "See your insta"])
 
 # Page One
 if page == "Key Stats":
+    
     st.header("IG Account Statistics")
     
     # Dropdown menu to select author
@@ -113,18 +236,18 @@ if page == "Key Stats":
     st.header("Top Posts of the Week")
     top_posts = get_top_posts(data, author_name)
     grid(top_posts, 3) # setup grid with posts
-    st.write(top_posts)
 
-
+    
 
 # Page Two
 if page == "Trends":
     st.header("Key Stats Over Time")
-    df = data
     
+    df = data
     author_names = data['author_name'].unique()    # unique list of account names for the selector
     data = data.sort_values(by=['post_date'])     # order data by date so it doesn't go jagged
     data['post_date'] = pd.to_datetime(data['post_date'])  # convert timestamps into datetime objects for python
+    data['week_number'] = data['post_date'].dt.isocalendar().week
 
     # FILTER AUTHOR ACCOUNTS
     # Create a multiselect widget for author selection
@@ -138,23 +261,9 @@ if page == "Trends":
 
 
     # FILTER DATES
-    # filter data to only the relevant months
-    earliest_date = '1/1/2024'
-    latest_date = '13/07/2024'
-
-    # Convert the string to a datetime object
-    date_object_1 = datetime.strptime(earliest_date, "%d/%m/%Y")
-    date_object_2 = datetime.strptime(latest_date, "%d/%m/%Y")
-
-    # Convert the datetime object to the desired format
-    formatted_date_1 = date_object_1.strftime("%Y-%m-%dT%H:%M:%S+00:00")
-    formatted_date_2 = date_object_2.strftime("%Y-%m-%dT%H:%M:%S+00:00")
-
-    data = data[(data['post_date'] >= formatted_date_1) & (data['post_date'] <= formatted_date_2)]
-
+    data = weekSlider(data)
 
     # GROUP BY WEEK & AUTHOR
-    data['week_number'] = data['post_date'].dt.isocalendar().week
     # Assuming your DataFrame is named 'df'
     grouped_df_AW = data.groupby(['author_name', 'week_number']).agg({
         'like_count': 'mean',
@@ -165,6 +274,9 @@ if page == "Trends":
     # Rename the columns for clarity
     grouped_df_AW.columns = ['author_name', 'post_date', 'like_count', 'comment_count', 'post_count']
 
+    # Indexing post performance: has an account outperformed themselves on a particular week?
+    indexed_performance = get_author_summary(data)
+
 
     # ASSIGN WHAT TO PLOT
     data = grouped_df_AW
@@ -172,17 +284,29 @@ if page == "Trends":
     # Plotting data over time
     fig = px.line(data, x='post_date', y='like_count', color='author_name', title='Average Likes Over Time')
     st.plotly_chart(fig)
-    
+
     fig = px.line(data, x='post_date', y='comment_count', color='author_name', title='Average Comments Over Time')
     st.plotly_chart(fig)
-    
-    fig = px.line(data, x='post_date', y=(data['like_count'] + data['comment_count']) / data['like_count'].count(), color='author_name', title='Engagement Rate Over Time')
+
+    #    fig = px.line(data, x='post_date', y=(data['like_count'] + data['comment_count']) / data['like_count'].count(), color='author_name', title='Engagement Rate Over Time')
+    #    st.plotly_chart(fig)
+
+    fig = px.line(indexed_performance, x='week_number', y=indexed_performance['indexed_likes_per_post'], color='author_name', title='Account Performance')
     st.plotly_chart(fig)
-    
+
+
     st.header("Top Posts of the Week")
     author_name = st.selectbox("Select Author", author_names)
     top_posts = get_top_posts(df, author_name)
     grid(top_posts.head(30), n_cols=3)
 
-#  __name__ == "__main__":
-#    st.run()
+    #  __name__ == "__main__":
+    #    st.run()
+
+
+# Page Three
+if page == "See your insta":
+    fetchAccountButton()
+
+    # Add account:
+    # fetchAccountSidebar()
