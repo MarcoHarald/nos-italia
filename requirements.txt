@@ -1,4 +1,9 @@
 streamlit
 .env
 .venv
-
+datetime
+pandas
+time
+supabase
+dotenv
+os
